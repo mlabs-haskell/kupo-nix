@@ -1,0 +1,126 @@
+{
+  description = "kupo";
+
+  inputs = {
+    kupo-src = {
+      # kupo v2.10.0, with a fixed sha256 hash of ogmios
+      url = "git+https://github.com/CardanoSolutions/kupo?rev=d412c7a21d348647bd17995b41dcab42009e49ba&submodules=1";
+      flake = false;
+    };
+
+    haskell-nix = {
+      url = "github:input-output-hk/haskell.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+
+    CHaP = {
+      url = "github:intersectmbo/cardano-haskell-packages?ref=repo";
+      flake = false;
+    };
+
+    iohk-nix = {
+      url = "github:input-output-hk/iohk-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs =
+    {
+      self,
+      kupo-src,
+      nixpkgs,
+      haskell-nix,
+      iohk-nix,
+      CHaP,
+      ...
+    }:
+    let
+      defaultSystems = [
+        "x86_64-linux"
+        "x86_64-darwin"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+
+      perSystem = nixpkgs.lib.genAttrs defaultSystems;
+
+      nixpkgsFor =
+        system:
+        import nixpkgs {
+          overlays = [
+            iohk-nix.overlays.crypto
+            haskell-nix.overlay
+            iohk-nix.overlays.haskell-nix-crypto
+
+          ];
+          inherit (haskell-nix) config;
+          inherit system;
+        };
+
+      projectFor =
+        { system }:
+        let
+          pkgs = nixpkgsFor system;
+
+          cleanSource = nixpkgs.lib.cleanSourceWith {
+            name = "kupo-src-clean";
+            src = "${kupo-src}";
+            filter = path: type: builtins.all (x: x) [ (baseNameOf path != "package.yaml") ];
+          };
+
+        in
+        pkgs.haskell-nix.cabalProject {
+          src = cleanSource;
+          inputMap = {
+            "https://input-output-hk.github.io/cardano-haskell-packages" = CHaP;
+          };
+          name = "kupo";
+          compiler-nix-name = "ghc966";
+
+          shell = {
+            inputsFrom = [ pkgs.libsodium-vrf ];
+            exactDeps = true;
+            nativeBuildInputs = [
+              pkgs.libsodium-vrf
+              pkgs.secp256k1
+            ];
+          };
+
+          sha256map = {
+            "https://github.com/CardanoSolutions/ogmios"."ae876badb138f42dcd6d2389734b0c15502684ed" =
+              "sha256-xkOfOdX6Dxi7+VW78Tk3n3MoguIg39pKdxiNVfdeEwE=";
+          };
+
+          modules = [
+            {
+              doHaddock = false;
+              packages = {
+                cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [ [ pkgs.libsodium-vrf ] ];
+
+                cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [
+                  [
+                    pkgs.libsodium-vrf
+                    pkgs.secp256k1
+                    pkgs.libblst
+                  ]
+                ];
+              };
+            }
+          ];
+
+        };
+    in
+    {
+      flake = perSystem (system: (projectFor { inherit system; }).flake { });
+
+      defaultPackage = perSystem (system: self.flake.${system}.packages."kupo:exe:kupo");
+
+      packages = perSystem (system: self.flake.${system}.packages);
+
+      devShell = perSystem (system: self.flake.${system}.devShell);
+
+      herculesCI.ciSystems = [ "x86_64-linux" ];
+    };
+}
