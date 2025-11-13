@@ -4,7 +4,7 @@
   inputs = {
     kupo-src = {
       # kupo v2.10.0, with a fixed sha256 hash of ogmios
-      url = "git+https://github.com/CardanoSolutions/kupo?rev=d412c7a21d348647bd17995b41dcab42009e49ba&submodules=1";
+      url = "git+https://github.com/CardanoSolutions/kupo?ref=refs/tags/v2.11.0&submodules=1";
       flake = false;
     };
 

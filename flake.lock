@@ -461,17 +461,17 @@
     "kupo-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1739623466,
-        "narHash": "sha256-/tzZuPr+EnmLmMOmjg/1xr1uj/Zb24Q5F2VwLIGp6ik=",
-        "ref": "refs/heads/master",
-        "rev": "d412c7a21d348647bd17995b41dcab42009e49ba",
-        "revCount": 664,
+        "lastModified": 1749537460,
+        "narHash": "sha256-xO5hbz4p62bLx7vuRnHaAPkgXgzO0/DS7n0sra3XMNc=",
+        "ref": "refs/tags/v2.11.0",
+        "rev": "d3f604d2ad01574aa577220ecf7ffcd6b946be36",
+        "revCount": 683,
         "submodules": true,
         "type": "git",
         "url": "https://github.com/CardanoSolutions/kupo"
       },
       "original": {
-        "rev": "d412c7a21d348647bd17995b41dcab42009e49ba",
+        "ref": "refs/tags/v2.11.0",
         "submodules": true,
         "type": "git",
         "url": "https://github.com/CardanoSolutions/kupo"
