@@ -3,7 +3,6 @@
 
   inputs = {
     kupo-src = {
-      # kupo v2.10.0, with a fixed sha256 hash of ogmios
       url = "git+https://github.com/CardanoSolutions/kupo?ref=refs/tags/v2.11.0&submodules=1";
       flake = false;
     };
@@ -106,10 +105,17 @@
                     pkgs.libblst
                   ]
                 ];
+
+                kupo = {
+                  # kupo.cabal has a reference to a non-existent yaml file
+                  postPatch = ''
+                    substituteInPlace kupo.cabal --replace-warn "docs/api/v2.9.0.yaml" ""
+                    substituteInPlace kupo.cabal --replace-warn "docs/api/v2.11.0.yaml" ""
+                  '';
+                };
               };
             }
           ];
-
         };
     in
     {
