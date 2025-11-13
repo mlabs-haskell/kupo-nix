@@ -3,8 +3,7 @@
 
   inputs = {
     kupo-src = {
-      # kupo v2.10.0, with a fixed sha256 hash of ogmios
-      url = "git+https://github.com/CardanoSolutions/kupo?rev=d412c7a21d348647bd17995b41dcab42009e49ba&submodules=1";
+      url = "git+https://github.com/CardanoSolutions/kupo?ref=refs/tags/v2.11.0&submodules=1";
       flake = false;
     };
 
@@ -106,10 +105,17 @@
                     pkgs.libblst
                   ]
                 ];
+
+                kupo = {
+                  # kupo.cabal has a reference to a non-existent yaml file
+                  postPatch = ''
+                    substituteInPlace kupo.cabal --replace-warn "docs/api/v2.9.0.yaml" ""
+                    substituteInPlace kupo.cabal --replace-warn "docs/api/v2.11.0.yaml" ""
+                  '';
+                };
               };
             }
           ];
-
         };
     in
     {
@@ -119,7 +125,7 @@
 
       packages = perSystem (system: self.flake.${system}.packages);
 
-      devShell = perSystem (system: self.flake.${system}.devShell);
+      devShell = perSystem (system: self.flake.${system}.devShells.default);
 
       herculesCI.ciSystems = [ "x86_64-linux" ];
     };
